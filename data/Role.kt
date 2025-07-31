@@ -1,4 +1,5 @@
 package data
-enum class Role {
-    INTERN, EMPLOYEE, MANAGER
+enum class Role(val role: String) {
+    INTERN("Intern"), EMPLOYEE("Employee"), MANAGER("Manager");
+    override fun toString(): String = role
 }

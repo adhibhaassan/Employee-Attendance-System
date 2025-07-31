@@ -1,5 +1,4 @@
 package operation
-
 import data.AttendanceData
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -16,7 +15,7 @@ class AttendanceService {
         return if (attendanceList.add(AttendanceData(id, time))) {
             "Check-in successful: $time"
         } else {
-            "Already checked-in today."
+            "Check-in failed."
         }
     }
 
@@ -24,19 +23,15 @@ class AttendanceService {
         print("Enter your Employee ID: ")
         val id = readln().trim()
 
-        val records = attendanceList.filter { it.employeeId == id }
-        if (records.isEmpty()) {
-            println("Invalid ID or no check-in records found.")
-            return
-        }
-
-        val checkOutTime = getDateTime() ?: return
-
+        val records = attendanceList.allByEmployee(id)
         val activeRecord = records.lastOrNull { it.checkOutDateTime == null }
+
         if (activeRecord == null) {
             println("No active check-in found for this ID.")
             return
         }
+
+        val checkOutTime = getDateTime() ?: return
 
         if (checkOutTime.isBefore(activeRecord.checkInDateTime)) {
             println("Check-out time cannot be before check-in time.")
@@ -53,28 +48,31 @@ class AttendanceService {
         println("Worked ${"%02d".format(hours)}h ${"%02d".format(minutes)}m")
     }
 
-
     fun getIdForAttendance(empService: EmployeeService): List<AttendanceData>? {
         print("Enter Employee ID: ")
         val id = readln().trim()
-        return if (!empService.isValidId(id)) null else attendanceList.allByEmployee(id)
+        return if (!empService.isValidId(id)){
+            null
+        }
+        else {
+            attendanceList.allByEmployee(id)
+        }
     }
 
-    private fun getDateTime(): LocalDateTime? {
-        print("Enter date-time (yyyy-MM-dd HH:mm) or press Enter for current: ")
+    fun getDateTime(): LocalDateTime? {
+        print("Enter date-time (yyyy-MM-dd HH:mm)(OR) Press Enter for current: ")
         val input = readln().trim()
         val now = LocalDateTime.now()
-
         return if (input.isEmpty()) {
             now
         } else {
             try {
-                val parsed = LocalDateTime.parse(input, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                if (parsed.isAfter(now)) {
+                val parsedDateTime = LocalDateTime.parse(input, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                if (parsedDateTime.isAfter(now)) {
                     println("Cannot use a future date/time.")
                     null
                 } else {
-                    parsed
+                    parsedDateTime
                 }
             } catch (e: Exception) {
                 println("Invalid date format.")
@@ -82,6 +80,4 @@ class AttendanceService {
             }
         }
     }
-
-
 }
